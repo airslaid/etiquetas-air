@@ -8,18 +8,15 @@
     <style>
       @media print {
         @page {
-          /* VALORES INVERTIDOS: 7cm largura x 10cm altura */
-          size: 7cm 10cm; 
+          /* Revertendo para o tamanho físico real da etiqueta */
+          size: 10cm 7cm portrait;
           margin: 0mm;
         }
         html, body {
           margin: 0 !important;
           padding: 0 !important;
-          /* Largura Invertida */
-          width: 7cm !important;
-          /* Altura Invertida */
-          height: 10cm !important;
-          overflow: hidden !important;
+          width: 100%;
+          height: 100%;
         }
         body {
           background: white;
@@ -30,12 +27,6 @@
         /* Oculta tudo por padrão para garantir que apenas o elemento fixo apareça */
         body > *:not(#root) {
           display: none;
-        }
-        #root {
-          width: 7cm !important;
-          height: 10cm !important;
-          margin: 0 !important;
-          padding: 0 !important;
         }
       }
     </style>
