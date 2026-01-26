@@ -50,67 +50,74 @@ const ProductDetails: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 text-gray-500 gap-3">
-        <Loader2 className="animate-spin text-rose-700" size={32} />
-        <p>Carregando...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 text-slate-500 gap-3">
+        <Loader2 className="animate-spin text-[#9f1239]" size={32} />
+        <p className="font-medium text-sm tracking-wide">Carregando detalhes...</p>
       </div>
     );
   }
 
   if (error || !product) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6 text-center font-sans">
-        <div className="bg-red-50 p-4 rounded-full mb-4 text-red-600">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 text-center font-sans">
+        <div className="bg-red-50 p-4 rounded-full mb-4 text-red-600 shadow-sm">
            <AlertCircle size={40} />
         </div>
-        <h1 className="text-xl font-bold text-gray-800 mb-2">Ops! Algo deu errado.</h1>
-        <p className="text-gray-600 mb-6 max-w-xs mx-auto">{error}</p>
+        <h1 className="text-xl font-bold text-slate-800 mb-2">Produto não encontrado</h1>
+        <p className="text-slate-600 mb-6 max-w-xs mx-auto text-sm">{error}</p>
       </div>
     );
   }
 
   // Componente reutilizável para os Cards
   const DetailCard = ({ label, value, isBig = false }: { label: string, value: string | number, isBig?: boolean }) => (
-    <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)] w-full mb-4">
-      <h3 className="text-[11px] font-bold text-[#9f1239] uppercase tracking-wider mb-2 font-sans">
+    <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] w-full transition-all hover:shadow-md">
+      <h3 className="text-[10px] font-bold text-[#9f1239] uppercase tracking-widest mb-1.5 font-sans">
         {label}
       </h3>
-      <p className={`text-gray-900 font-medium ${isBig ? 'text-xl' : 'text-lg'} leading-snug break-words`}>
+      <p className={`text-slate-900 font-semibold ${isBig ? 'text-2xl' : 'text-lg'} leading-tight break-words`}>
         {value}
       </p>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] font-sans pb-10">
+    <div className="min-h-screen bg-slate-50 font-sans pb-12">
       {/* Header com Logo */}
-      <div className="bg-white pt-8 pb-6 px-4 flex justify-center mb-2">
-         {/* Logo Air Slaid - Usando URL externa para garantir exibição imediata. 
-             Para produção, recomenda-se colocar o arquivo 'logo.png' na pasta public e usar src="/logo.png" */}
+      <div className="bg-white pt-10 pb-8 px-6 flex justify-center shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] mb-6 sticky top-0 z-10 backdrop-blur-sm bg-white/95">
+         {/* 
+            IMPORTANTE: Coloque o arquivo 'logo-airslaid.png' dentro da pasta 'public' na raiz do projeto.
+         */}
          <img 
-            src="https://airslaid.com.br/wp-content/uploads/2021/04/Logo-Air-Slaid-1.png" 
-            alt="Grupo Air Slaid" 
-            className="h-16 object-contain"
+            src="/logo-airslaid.png" 
+            alt="Grupo Air Slaid - Solução em Filtragem" 
+            className="w-64 h-auto object-contain"
             onError={(e) => {
-                // Fallback caso a imagem não carregue
+                // Fallback caso a imagem não seja encontrada na pasta public
                 e.currentTarget.style.display = 'none';
                 const parent = e.currentTarget.parentElement;
                 if (parent) {
                     const textNode = document.createElement("div");
-                    textNode.className = "text-2xl font-bold text-[#9f1239] tracking-tighter";
-                    textNode.innerHTML = "air <span class='font-light'>slaid</span>";
+                    textNode.className = "text-center";
+                    textNode.innerHTML = `
+                      <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Grupo</div>
+                      <div class="text-3xl font-bold text-[#9f1239] tracking-tighter leading-none">air <span class="font-light">slaid</span></div>
+                      <div class="text-[9px] font-medium text-gray-400 uppercase tracking-widest mt-1">Solução em Filtragem</div>
+                      <div class="text-[8px] text-red-400 mt-2 font-mono">logo-airslaid.png não encontrado</div>
+                    `;
                     parent.appendChild(textNode);
                 }
             }}
          />
       </div>
 
-      <div className="max-w-md mx-auto px-5">
+      <div className="max-w-md mx-auto px-5 flex flex-col gap-4">
         
-        {/* 1. Ordem de Produção */}
+        {/* 1. Ordem de Produção - Destaque Principal */}
         <DetailCard 
             label="Ordem de Produção" 
             value={product.ord_in_codigo} 
+            isBig={true}
         />
 
         {/* 2. Número do Lote */}
@@ -145,8 +152,10 @@ const ProductDetails: React.FC = () => {
             value={product.esv_st_valor || "Não informada"} 
         />
         
-        <div className="mt-8 text-center opacity-40">
-            <div className="h-1 w-16 bg-gray-300 rounded-full mx-auto mb-2"></div>
+        {/* Rodapé decorativo */}
+        <div className="mt-8 text-center">
+            <div className="h-1 w-12 bg-slate-200 rounded-full mx-auto mb-3"></div>
+            <p className="text-[10px] text-slate-400 uppercase tracking-widest">Grupo Air Slaid</p>
         </div>
 
       </div>
