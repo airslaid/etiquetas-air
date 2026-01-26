@@ -8,16 +8,17 @@
     <style>
       @media print {
         @page {
-          /* "auto" permite que a configuração da impressora/driver defina o tamanho */
-          size: auto; 
+          /* Tamanho Fixo: 10cm largura x 7cm altura */
+          size: 10cm 7cm; 
           margin: 0mm;
         }
         html, body {
           margin: 0 !important;
           padding: 0 !important;
-          /* Ocupa exatamente o espaço que o driver da impressora disponibilizar */
-          width: 100% !important;
-          height: 100% !important;
+          /* Largura Fixa conforme solicitado */
+          width: 10cm !important;
+          /* Altura Fixa (o conteúdo será limitado a 6.9cm no componente para segurança) */
+          height: 7cm !important;
           overflow: hidden !important;
         }
         body {
@@ -31,8 +32,10 @@
           display: none;
         }
         #root {
-          width: 100% !important;
-          height: 100% !important;
+          width: 10cm !important;
+          height: 7cm !important;
+          margin: 0 !important;
+          padding: 0 !important;
         }
       }
     </style>
