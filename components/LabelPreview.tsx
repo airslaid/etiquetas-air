@@ -68,9 +68,18 @@ const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
   return (
     <div className="w-full flex justify-center mt-8">
       {/* Container Visual representando a área de 10cm x 7cm */}
-      {/* box-border garante que as bordas não somem ao tamanho total */}
+      {/* 
+          ALTERAÇÃO DE IMPRESSÃO:
+          Adicionado 'print:fixed print:top-0 print:left-0 print:z-[9999] print:m-0'.
+          Isso remove a etiqueta do fluxo normal da página HTML e a cola no canto superior esquerdo
+          do papel, garantindo que ocupe os 10cm x 7cm definidos sem margens extras do layout do site.
+      */}
       <div
-        className="bg-white text-black shadow-lg print:shadow-none print:w-[10cm] print:h-[7cm] w-[10cm] h-[7cm] flex flex-row overflow-hidden border border-gray-200 print:border-none box-border"
+        className="bg-white text-black shadow-lg 
+                   print:shadow-none print:border-none print:fixed print:top-0 print:left-0 print:z-[9999] print:m-0
+                   print:w-[10cm] print:h-[7cm] 
+                   w-[10cm] h-[7cm] 
+                   flex flex-row overflow-hidden border border-gray-200 box-border"
         style={{ breakInside: "avoid" }}
       >
         {/* Coluna 1 */}
