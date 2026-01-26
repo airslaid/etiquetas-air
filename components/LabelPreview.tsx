@@ -8,55 +8,80 @@ interface LabelPreviewProps {
 }
 
 const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
-  // 10cm width total, divided by 3 columns ~ 3.33cm per label. 7cm height.
-  // We will replicate the same info 3 times to fill the row.
+  // Configuração física: 10cm largura x 7cm altura total.
+  // Dividido em 3 colunas, cada etiqueta tem ~3.33cm de largura por 7cm de altura.
 
   const LabelContent = () => (
-    <div className="flex flex-col items-center justify-between h-full p-1 border-r border-dashed border-gray-300 last:border-0 overflow-hidden text-center bg-white relative">
-      <div className="w-full text-left z-10">
-        <h2 className="text-[8px] font-bold uppercase leading-tight truncate">
-          {data.pro_st_descricao}
-        </h2>
-        <p className="text-[7px] text-gray-600">REF: {data.pro_st_alternativo}</p>
+    <div className="flex flex-col items-center h-full pt-1 pb-1 relative bg-white overflow-hidden box-border">
+      
+      {/* Topo: Texto fixo */}
+      <span className="text-[7px] uppercase font-sans text-black leading-none mt-1 mb-2 tracking-tight">
+        Produzido no Brasil
+      </span>
+
+      {/* Meio: QR Code */}
+      {/* Mantido em 60% */}
+      <div className="w-[60%] aspect-square flex items-center justify-center mb-1">
+        <QRCode
+          style={{ height: "100%", width: "100%" }}
+          value={detailsUrl}
+          viewBox={`0 0 256 256`}
+        />
       </div>
 
-      <div className="flex-grow flex items-center justify-center w-full my-1">
-        <div style={{ height: "auto", margin: "0 auto", maxWidth: "100%", width: "100%" }}>
-          <QRCode
-            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-            value={detailsUrl}
-          />
-        </div>
-      </div>
+      {/* Fundo: Textos Rotacionados */}
+      {/* 
+         Rotação -90 graus.
+         O texto flui de baixo para cima na etiqueta física.
+         A ordem visual agora será:
+         1. Nome da Empresa (Quebrado)
+         2. Código do Produto (Abaixo da empresa)
+      */}
+      <div className="flex-grow w-full relative">
+         <div className="absolute inset-0 flex items-center justify-center">
+            {/* O container gira -90 graus */}
+            <div className="flex flex-col items-center justify-center -rotate-90 origin-center transform translate-y-2">
+                 
+                 {/* Nome da Empresa - Quebrado em 2 linhas e centralizado */}
+                 <div className="flex flex-col items-center justify-center mb-1 leading-none">
+                    {/* Aumentado significativamente para destaque */}
+                    <span className="text-[11px] font-black whitespace-nowrap uppercase text-black font-sans tracking-tight">
+                       AIR SLAID
+                    </span>
+                    {/* Aumentado para o limite da largura */}
+                    <span className="text-[8px] font-bold whitespace-nowrap uppercase text-black font-sans tracking-wide">
+                       TECIDOS TÉCNICOS LTDA
+                    </span>
+                 </div>
 
-      <div className="w-full text-[6px] leading-tight text-left space-y-[1px] z-10">
-        <div className="flex justify-between">
-          <span>OP: <strong>{data.ord_in_codigo}</strong></span>
-          <span>Lote: {data.orl_st_lotefabricacao}</span>
-        </div>
-        <div>Comp: {data.esv_st_valor ? data.esv_st_valor.substring(0, 20) : ""}...</div>
-        {/* Helper for debugging URL issues */}
-        <div className="text-[5px] text-gray-400 mt-1 text-center truncate">{detailsUrl}</div>
+                 {/* Código do Produto - Abaixo do nome da empresa */}
+                 <span className="text-[16px] font-black whitespace-nowrap uppercase text-black font-sans leading-none tracking-tighter">
+                   {data.pro_st_alternativo || "CÓDIGO"}
+                 </span>
+
+            </div>
+         </div>
       </div>
     </div>
   );
 
   return (
     <div className="w-full flex justify-center mt-8">
-      {/* Visual Container representing the 10cm x 7cm area */}
+      {/* Container Visual representando a área de 10cm x 7cm */}
+      {/* box-border garante que as bordas não somem ao tamanho total */}
       <div
-        className="bg-white text-black shadow-lg print:shadow-none print:w-[10cm] print:h-[7cm] w-[10cm] h-[7cm] flex flex-row overflow-hidden border border-gray-200 print:border-0 box-border"
+        className="bg-white text-black shadow-lg print:shadow-none print:w-[10cm] print:h-[7cm] w-[10cm] h-[7cm] flex flex-row overflow-hidden border border-gray-200 print:border-none box-border"
         style={{ breakInside: "avoid" }}
       >
-        {/* Column 1 */}
-        <div className="w-1/3 h-full border-r border-gray-200 border-dashed last:border-0">
+        {/* Coluna 1 */}
+        <div className="w-1/3 h-full border-r border-gray-300 border-dashed last:border-0">
           <LabelContent />
         </div>
-        {/* Column 2 */}
-        <div className="w-1/3 h-full border-r border-gray-200 border-dashed last:border-0">
+        {/* Coluna 2 */}
+        <div className="w-1/3 h-full border-r border-gray-300 border-dashed last:border-0">
           <LabelContent />
         </div>
-        {/* Column 3 */}
+        {/* Coluna 3 */}
         <div className="w-1/3 h-full">
           <LabelContent />
         </div>
