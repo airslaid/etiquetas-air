@@ -9,10 +9,8 @@ interface LabelPreviewProps {
 
 const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
   // Configuração física: 10cm largura x 7cm altura total.
-  // Ajuste 1: Container com padding-left de 6mm.
-  // Ajuste 2: Removidas as bordas (border-dashed).
-  // Ajuste 3: Adicionado padding-left nas colunas 2 e 3.
-  // Ajuste 4: Aumentado padding-top interno (pt-3) e tamanho das fontes da empresa.
+  // Ajuste de Impressão: Usamos w-full h-full e fixed inset-0 para que o container
+  // se adapte a qualquer tamanho de papel definido no driver da impressora (Argox).
 
   const LabelContent = () => (
     <div className="flex flex-col items-center h-full pt-3 pb-1 relative bg-white overflow-hidden box-border">
@@ -55,16 +53,22 @@ const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
             </div>
          </div>
       </div>
+
+      {/* Rodapé: Número da OP */}
+      <span className="text-[8px] font-bold text-black font-sans leading-none mt-1">
+        OP: {data.ord_in_codigo}
+      </span>
     </div>
   );
 
   return (
     <div className="w-full flex justify-center mt-8">
-      {/* Container Visual: 10cm x 7cm com Padding Left de 6mm */}
+      {/* Container Visual: 10cm x 7cm para visualização na tela */}
+      {/* Na impressão: Ocupa 100% do papel definido no driver (w-full h-full) */}
       <div
         className="bg-white text-black shadow-lg 
-                   print:shadow-none print:border-none print:fixed print:top-0 print:left-0 print:z-[9999] print:m-0
-                   print:w-[10cm] print:h-[7cm]
+                   print:shadow-none print:border-none print:fixed print:inset-0 print:z-[9999] print:m-0
+                   print:w-full print:h-full print:overflow-hidden
                    w-[10cm] h-[7cm] 
                    flex flex-row overflow-hidden border border-gray-200 box-border"
         style={{ 
