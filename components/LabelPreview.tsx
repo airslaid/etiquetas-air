@@ -9,7 +9,9 @@ interface LabelPreviewProps {
 
 const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
   // Configuração física: 10cm largura x 7cm altura total.
-  // Ajuste: Aumentado para 6mm de margem a esquerda (padding-left) para empurrar mais à direita.
+  // Ajuste 1: Container com padding-left de 6mm (mantido).
+  // Ajuste 2: Removidas as bordas (border-dashed).
+  // Ajuste 3: Adicionado padding-left nas colunas 2 e 3 para empurrar o conteúdo para a direita.
 
   const LabelContent = () => (
     <div className="flex flex-col items-center h-full pt-1 pb-1 relative bg-white overflow-hidden box-border">
@@ -66,19 +68,21 @@ const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
                    flex flex-row overflow-hidden border border-gray-200 box-border"
         style={{ 
           breakInside: "avoid",
-          paddingLeft: "6mm" // Aumentado para 6mm conforme solicitação
+          paddingLeft: "6mm" 
         }}
       >
         {/* Coluna 1 */}
-        <div className="w-1/3 h-full border-r border-gray-300 border-dashed last:border-0">
-          <LabelContent />
-        </div>
-        {/* Coluna 2 */}
-        <div className="w-1/3 h-full border-r border-gray-300 border-dashed last:border-0">
-          <LabelContent />
-        </div>
-        {/* Coluna 3 */}
         <div className="w-1/3 h-full">
+          <LabelContent />
+        </div>
+        
+        {/* Coluna 2 - Adicionado pl-[4mm] para afastar da primeira */}
+        <div className="w-1/3 h-full pl-[4mm]">
+          <LabelContent />
+        </div>
+        
+        {/* Coluna 3 - Adicionado pl-[4mm] para afastar da segunda */}
+        <div className="w-1/3 h-full pl-[4mm]">
           <LabelContent />
         </div>
       </div>
