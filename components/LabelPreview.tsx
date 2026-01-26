@@ -9,8 +9,7 @@ interface LabelPreviewProps {
 
 const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
   // Configuração física: 10cm largura x 7cm altura total.
-  // Ajuste: Adicionado 2mm de margem a esquerda (padding-left) para corrigir corte na impressão.
-  // O container continua com 10cm totais, mas o conteúdo interno desloca para a direita.
+  // Ajuste: Aumentado para 6mm de margem a esquerda (padding-left) para empurrar mais à direita.
 
   const LabelContent = () => (
     <div className="flex flex-col items-center h-full pt-1 pb-1 relative bg-white overflow-hidden box-border">
@@ -58,7 +57,7 @@ const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
 
   return (
     <div className="w-full flex justify-center mt-8">
-      {/* Container Visual: 10cm x 7cm com Padding Left de 2mm */}
+      {/* Container Visual: 10cm x 7cm com Padding Left de 6mm */}
       <div
         className="bg-white text-black shadow-lg 
                    print:shadow-none print:border-none print:fixed print:top-0 print:left-0 print:z-[9999] print:m-0
@@ -67,7 +66,7 @@ const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
                    flex flex-row overflow-hidden border border-gray-200 box-border"
         style={{ 
           breakInside: "avoid",
-          paddingLeft: "2mm" // Adicionando a margem solicitada
+          paddingLeft: "6mm" // Aumentado para 6mm conforme solicitação
         }}
       >
         {/* Coluna 1 */}
