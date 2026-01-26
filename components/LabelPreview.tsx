@@ -13,25 +13,11 @@ const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
   const LabelContent = () => (
     <div className="flex flex-col items-center h-full pt-3 pb-1 relative bg-white overflow-hidden box-border">
       
-      {/* Topo: Texto fixo */}
-      <span className="text-[7px] uppercase font-sans text-black leading-none mt-1 mb-2 tracking-tight">
-        Produzido no Brasil
-      </span>
-
-      {/* Meio: QR Code */}
-      <div className="w-[60%] aspect-square flex items-center justify-center mb-1">
-        <QRCode
-          style={{ height: "100%", width: "100%" }}
-          value={detailsUrl}
-          viewBox={`0 0 256 256`}
-        />
-      </div>
-
-      {/* Fundo: Textos Rotacionados */}
+      {/* Topo: Textos Rotacionados (Agora ocupa a parte superior/central) */}
       <div className="flex-grow w-full relative">
          <div className="absolute inset-0 flex items-center justify-center">
             {/* O container gira -90 graus */}
-            <div className="flex flex-col items-center justify-center -rotate-90 origin-center transform translate-y-2">
+            <div className="flex flex-col items-center justify-center -rotate-90 origin-center">
                  
                  {/* Nome da Empresa */}
                  <div className="flex flex-col items-center justify-center mb-1 leading-none">
@@ -48,9 +34,29 @@ const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
                    {data.pro_st_alternativo || "CÓDIGO"}
                  </span>
 
+                 {/* OP Number - Bem pequeno */}
+                 <span className="text-[8px] font-bold whitespace-nowrap text-black font-sans leading-none mt-0.5">
+                   OP: {data.ord_in_codigo}
+                 </span>
+
             </div>
          </div>
       </div>
+
+      {/* Meio: QR Code */}
+      <div className="w-[60%] aspect-square flex items-center justify-center mb-1">
+        <QRCode
+          style={{ height: "100%", width: "100%" }}
+          value={detailsUrl}
+          viewBox={`0 0 256 256`}
+        />
+      </div>
+
+      {/* Baixo: Texto fixo (De ponta cabeça / 180 graus) */}
+      <span className="text-[7px] uppercase font-sans text-black leading-none mb-2 tracking-tight rotate-180">
+        Produzido no Brasil
+      </span>
+
     </div>
   );
 
