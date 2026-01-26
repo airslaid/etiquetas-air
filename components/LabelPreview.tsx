@@ -9,12 +9,13 @@ interface LabelPreviewProps {
 
 const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
   // Configuração física: 10cm largura x 7cm altura total.
-  // Ajuste 1: Container com padding-left de 6mm (mantido).
+  // Ajuste 1: Container com padding-left de 6mm.
   // Ajuste 2: Removidas as bordas (border-dashed).
-  // Ajuste 3: Adicionado padding-left nas colunas 2 e 3 para empurrar o conteúdo para a direita.
+  // Ajuste 3: Adicionado padding-left nas colunas 2 e 3.
+  // Ajuste 4: Aumentado padding-top interno (pt-3) e tamanho das fontes da empresa.
 
   const LabelContent = () => (
-    <div className="flex flex-col items-center h-full pt-1 pb-1 relative bg-white overflow-hidden box-border">
+    <div className="flex flex-col items-center h-full pt-3 pb-1 relative bg-white overflow-hidden box-border">
       
       {/* Topo: Texto fixo */}
       <span className="text-[7px] uppercase font-sans text-black leading-none mt-1 mb-2 tracking-tight">
@@ -38,10 +39,10 @@ const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
                  
                  {/* Nome da Empresa */}
                  <div className="flex flex-col items-center justify-center mb-1 leading-none">
-                    <span className="text-[11px] font-black whitespace-nowrap uppercase text-black font-sans tracking-tight">
+                    <span className="text-[14px] font-black whitespace-nowrap uppercase text-black font-sans tracking-tight">
                        AIR SLAID
                     </span>
-                    <span className="text-[8px] font-bold whitespace-nowrap uppercase text-black font-sans tracking-wide">
+                    <span className="text-[10px] font-bold whitespace-nowrap uppercase text-black font-sans tracking-wide">
                        TECIDOS TÉCNICOS LTDA
                     </span>
                  </div>
