@@ -8,15 +8,21 @@
     <style>
       @media print {
         @page {
-          /* Revertendo para o tamanho físico real da etiqueta */
-          size: 10cm 7cm portrait;
+          /* 
+             CORREÇÃO DA SOBRA BRANCA:
+             Forçamos o tamanho exato da etiqueta (10cm largura x 7cm altura).
+             Isso impede que o navegador use os 100mm configurados no driver.
+          */
+          size: 10cm 7cm; 
           margin: 0mm;
         }
         html, body {
           margin: 0 !important;
           padding: 0 !important;
-          width: 100%;
-          height: 100%;
+          width: 10cm !important;
+          /* Trava a altura do corpo em 7cm exatos */
+          height: 7cm !important;
+          overflow: hidden !important;
         }
         body {
           background: white;
@@ -27,6 +33,12 @@
         /* Oculta tudo por padrão para garantir que apenas o elemento fixo apareça */
         body > *:not(#root) {
           display: none;
+        }
+        #root {
+          width: 10cm !important;
+          height: 7cm !important;
+          margin: 0 !important;
+          padding: 0 !important;
         }
       }
     </style>
