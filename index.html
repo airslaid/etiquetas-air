@@ -8,8 +8,8 @@
     <style>
       @media print {
         @page {
-          /* Define tamanho fixo E força orientação retrato */
-          size: 10cm 7cm portrait;
+          /* Tamanho exato configurado no Driver da Argox */
+          size: 95.5mm 152.4mm portrait;
           margin: 0mm;
         }
         html, body {
@@ -24,8 +24,7 @@
         .no-print {
           display: none !important;
         }
-        /* Oculta tudo por padrão para garantir que apenas o elemento fixo apareça, 
-           caso o navegador tente renderizar o fundo da página */
+        /* Oculta tudo por padrão para garantir que apenas o elemento fixo apareça */
         body > *:not(#root) {
           display: none;
         }
