@@ -13,6 +13,7 @@ const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
   // Ajuste 2: Removidas as bordas (border-dashed).
   // Ajuste 3: Adicionado padding-left nas colunas 2 e 3.
   // Ajuste 4: Aumentado padding-top interno (pt-3) e tamanho das fontes da empresa.
+  // Ajuste 5: Adicionado OP no rodapé.
 
   const LabelContent = () => (
     <div className="flex flex-col items-center h-full pt-3 pb-1 relative bg-white overflow-hidden box-border">
@@ -55,6 +56,11 @@ const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
             </div>
          </div>
       </div>
+
+      {/* Rodapé: Número da OP */}
+      <span className="text-[8px] font-bold text-black font-sans leading-none mt-1">
+        OP: {data.ord_in_codigo}
+      </span>
     </div>
   );
 
