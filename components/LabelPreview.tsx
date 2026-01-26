@@ -9,11 +9,8 @@ interface LabelPreviewProps {
 
 const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
   // Configuração física: 10cm largura x 7cm altura total.
-  // Ajuste 1: Container com padding-left de 6mm.
-  // Ajuste 2: Removidas as bordas (border-dashed).
-  // Ajuste 3: Adicionado padding-left nas colunas 2 e 3.
-  // Ajuste 4: Aumentado padding-top interno (pt-3) e tamanho das fontes da empresa.
-  // Ajuste 5: Adicionado OP no rodapé.
+  // Ajuste de Impressão: Usamos h-[6.95cm] na impressão para evitar que a impressora detecte uma "segunda página"
+  // e pule uma etiqueta em branco devido a erros de arredondamento de pixels/cm.
 
   const LabelContent = () => (
     <div className="flex flex-col items-center h-full pt-3 pb-1 relative bg-white overflow-hidden box-border">
@@ -66,11 +63,12 @@ const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
 
   return (
     <div className="w-full flex justify-center mt-8">
-      {/* Container Visual: 10cm x 7cm com Padding Left de 6mm */}
+      {/* Container Visual: 10cm x 7cm */}
+      {/* Na impressão: fixed top-0 left-0 e altura levemente reduzida (6.9cm) para segurança */}
       <div
         className="bg-white text-black shadow-lg 
                    print:shadow-none print:border-none print:fixed print:top-0 print:left-0 print:z-[9999] print:m-0
-                   print:w-[10cm] print:h-[7cm]
+                   print:w-[10cm] print:h-[6.95cm] print:overflow-hidden
                    w-[10cm] h-[7cm] 
                    flex flex-row overflow-hidden border border-gray-200 box-border"
         style={{ 

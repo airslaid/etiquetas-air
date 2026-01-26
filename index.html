@@ -8,15 +8,16 @@
     <style>
       @media print {
         @page {
-          /* Revertendo para o tamanho físico real da etiqueta */
-          size: 10cm 7cm portrait;
+          /* Tamanho exato da etiqueta */
+          size: 10cm 7cm;
           margin: 0mm;
         }
         html, body {
           margin: 0 !important;
           padding: 0 !important;
-          width: 100%;
-          height: 100%;
+          width: 10cm !important;
+          height: 7cm !important;
+          overflow: hidden !important;
         }
         body {
           background: white;
@@ -24,9 +25,14 @@
         .no-print {
           display: none !important;
         }
-        /* Oculta tudo por padrão para garantir que apenas o elemento fixo apareça */
+        /* Esconde tudo que não for o root ou o preview direto */
         body > *:not(#root) {
           display: none;
+        }
+        /* Garante que o root não interfira no layout de impressão */
+        #root {
+          margin: 0 !important;
+          padding: 0 !important;
         }
       }
     </style>
