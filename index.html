@@ -9,11 +9,11 @@
       @media print {
         @page {
           /* 
-             CORREÇÃO DA SOBRA BRANCA:
-             Forçamos o tamanho exato da etiqueta (10cm largura x 7cm altura).
-             Isso impede que o navegador use os 100mm configurados no driver.
+             CORREÇÃO DA SOBRA BRANCA + RETRATO FORÇADO:
+             Forçamos o tamanho exato da etiqueta (10cm largura x 7cm altura)
+             e a orientação portrait (retrato).
           */
-          size: 10cm 7cm; 
+          size: 10cm 7cm portrait; 
           margin: 0mm;
         }
         html, body {

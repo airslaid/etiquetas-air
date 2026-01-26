@@ -9,7 +9,6 @@ interface LabelPreviewProps {
 
 const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
   // Configuração RÍGIDA: 10cm x 7cm
-  // Isso elimina a sobra branca no rodapé.
   
   const LabelContent = () => (
     <div className="flex flex-col items-center h-full pt-3 pb-1 relative bg-white overflow-hidden box-border">
@@ -52,11 +51,6 @@ const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
             </div>
          </div>
       </div>
-
-      {/* Rodapé: Número da OP */}
-      <span className="text-[8px] font-bold text-black font-sans leading-none mt-1">
-        OP: {data.ord_in_codigo}
-      </span>
     </div>
   );
 
