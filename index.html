@@ -8,17 +8,17 @@
     <style>
       @media print {
         @page {
-          /* Tamanho Fixo: 10cm largura x 7cm altura */
-          size: 10cm 7cm; 
+          /* VALORES INVERTIDOS: 7cm largura x 10cm altura */
+          size: 7cm 10cm; 
           margin: 0mm;
         }
         html, body {
           margin: 0 !important;
           padding: 0 !important;
-          /* Largura Fixa conforme solicitado */
-          width: 10cm !important;
-          /* Altura Fixa (o conteúdo será limitado a 6.9cm no componente para segurança) */
-          height: 7cm !important;
+          /* Largura Invertida */
+          width: 7cm !important;
+          /* Altura Invertida */
+          height: 10cm !important;
           overflow: hidden !important;
         }
         body {
@@ -32,8 +32,8 @@
           display: none;
         }
         #root {
-          width: 10cm !important;
-          height: 7cm !important;
+          width: 7cm !important;
+          height: 10cm !important;
           margin: 0 !important;
           padding: 0 !important;
         }

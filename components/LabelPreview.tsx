@@ -8,10 +8,10 @@ interface LabelPreviewProps {
 }
 
 const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
-  // Configuração física: 10cm largura x 7cm altura total.
+  // Configuração física INVERTIDA: 7cm largura x 10cm altura.
   // SOLUÇÃO DE IMPRESSÃO:
-  // 1. Largura Fixa: print:w-[10cm] (solicitado pelo usuário)
-  // 2. Altura de Segurança: print:h-[6.9cm] (0.1cm a menos que o papel para evitar pular página em branco)
+  // 1. Largura Fixa: print:w-[7cm]
+  // 2. Altura de Segurança: print:h-[9.9cm] (0.1cm a menos na altura para evitar pular página)
   
   const LabelContent = () => (
     <div className="flex flex-col items-center h-full pt-3 pb-1 relative bg-white overflow-hidden box-border">
@@ -64,12 +64,12 @@ const LabelPreview: React.FC<LabelPreviewProps> = ({ data, detailsUrl }) => {
 
   return (
     <div className="w-full flex justify-center mt-8">
-      {/* Container Principal */}
+      {/* Container Principal INVERTIDO */}
       <div
         className="bg-white text-black shadow-lg 
                    print:shadow-none print:border-none print:fixed print:top-0 print:left-0 print:z-[9999] print:m-0
-                   print:w-[10cm] print:h-[6.9cm] print:overflow-hidden
-                   w-[10cm] h-[7cm] 
+                   print:w-[7cm] print:h-[9.9cm] print:overflow-hidden
+                   w-[7cm] h-[10cm] 
                    flex flex-row overflow-hidden border border-gray-200 box-border"
         style={{ 
           breakInside: "avoid",
