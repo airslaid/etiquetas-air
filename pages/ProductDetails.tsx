@@ -35,17 +35,23 @@ const ProductDetails: React.FC = () => {
              throw new Error("O código da OP é inválido.");
         }
 
+        // Changed from .single() to .limit(1) and taking the first result
+        // This prevents crashes if the database contains multiple lots for the same OP
         const { data, error } = await supabase
           .from(TABLE_NAME)
           .select('*')
           .eq('ord_in_codigo', opInt)
-          .single();
+          .limit(1);
 
         if (error) {
-             if (error.code === 'PGRST116') throw new Error(`Produto com OP ${opNumber} não encontrado.`);
              throw error;
         }
-        setProduct(data as PowerBiLabelData);
+        
+        if (!data || data.length === 0) {
+             throw new Error(`Produto com OP ${opNumber} não encontrado.`);
+        }
+
+        setProduct(data[0] as PowerBiLabelData);
       } catch (err: any) {
         console.error("Error fetching product:", err);
         setError(err.message || "Erro ao carregar detalhes do produto.");

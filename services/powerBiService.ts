@@ -4,23 +4,21 @@ import { PowerBiLabelData } from "../types";
 
 // --- SUPABASE READ OPERATIONS ---
 
-export const getProductionDataByOP = async (opNumber: number): Promise<PowerBiLabelData | null> => {
+export const getProductionDataByOP = async (opNumber: number): Promise<PowerBiLabelData[]> => {
   try {
     const { data, error } = await supabase
       .from(TABLE_NAME)
       .select('*')
-      .eq('ord_in_codigo', opNumber)
-      .single();
+      .eq('ord_in_codigo', opNumber);
 
     if (error) {
-      if (error.code === 'PGRST116') return null; // Not found
       throw error;
     }
 
-    return data as PowerBiLabelData;
+    return (data || []) as PowerBiLabelData[];
   } catch (error) {
     console.error("Supabase query error:", error);
-    return null;
+    return [];
   }
 };
 
@@ -64,10 +62,11 @@ const getAccessToken = async (): Promise<string> => {
 const fetchFromPowerBI = async (token: string): Promise<any[]> => {
   const url = `https://api.powerbi.com/v1.0/myorg/groups/${GROUP_ID}/datasets/${DATASET_ID}/executeQueries`;
 
+  // INCREASED LIMIT TO 5000 to ensure we get all relevant data
   const daxQuery = `
     EVALUATE
     SELECTCOLUMNS(
-      TOPN(500, '${TABLE_NAME}', '${TABLE_NAME}'[ord_dt_abertura_real], DESC),
+      TOPN(5000, '${TABLE_NAME}', '${TABLE_NAME}'[ord_dt_abertura_real], DESC),
       "ord_in_codigo", '${TABLE_NAME}'[ord_in_codigo],
       "ord_dt_abertura_real", '${TABLE_NAME}'[ord_dt_abertura_real],
       "fil_in_codigo", '${TABLE_NAME}'[fil_in_codigo],
@@ -138,18 +137,20 @@ export const syncPowerBiToSupabase = async (
       esv_st_valor: row["[esv_st_valor]"] || row.esv_st_valor || ""
     })).filter((r: any) => r.ord_in_codigo);
 
-    // CRITICAL FIX: Deduplicate rows based on 'ord_in_codigo'.
-    // If Power BI sends the same OP twice in the list, Supabase 'upsert' throws an error.
-    // We create a Map where the key is the OP number. This automatically removes duplicates, keeping the last one.
+    // CRITICAL FIX: Deduplicate rows based on Composite Key (OP + Filial + Lote).
     const uniqueRowsMap = new Map();
     formattedRows.forEach((row: any) => {
-        uniqueRowsMap.set(row.ord_in_codigo, row);
+        // Create a composite key to ensure uniqueness per Batch/Filial
+        const uniqueKey = `${row.ord_in_codigo}-${row.fil_in_codigo}-${row.orl_st_lotefabricacao || 'NL'}`;
+        uniqueRowsMap.set(uniqueKey, row);
     });
     
     const uniqueRows = Array.from(uniqueRowsMap.values());
     
     if (uniqueRows.length < formattedRows.length) {
-        onLog(`Duplicatas removidas. Processando ${uniqueRows.length} registros únicos.`);
+        onLog(`Duplicatas exatas removidas. Processando ${uniqueRows.length} registros únicos (OP + Filial + Lote).`);
+    } else {
+        onLog(`Processando ${uniqueRows.length} registros.`);
     }
 
     // Upsert to Supabase in chunks
@@ -160,13 +161,17 @@ export const syncPowerBiToSupabase = async (
     for (let i = 0; i < uniqueRows.length; i += chunkSize) {
       const chunk = uniqueRows.slice(i, i + chunkSize);
       
-      // Upsert data using the standard client (assumes RLS allows write or is disabled)
-      const { error } = await supabase.from(TABLE_NAME).upsert(chunk, { onConflict: 'ord_in_codigo' });
+      // FIX: Explicitly specify the composite key columns for conflict resolution.
+      // NOTE: For this to work, the Supabase table MUST have a unique constraint on these 3 columns combined.
+      const { error } = await supabase.from(TABLE_NAME).upsert(chunk, {
+        onConflict: 'ord_in_codigo,fil_in_codigo,orl_st_lotefabricacao'
+      });
       
       if (error) {
         onLog(`Erro ao salvar lote ${i}: ${error.message}`);
-        // Log detailed error for debugging
         console.error("Supabase Upsert Error:", error);
+        // Throw to allow Admin UI to catch it
+        throw error;
       } else {
         processed += chunk.length;
         if (processed % 100 === 0) onLog(`Sincronizados: ${processed}...`);

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, Printer, AlertCircle, Loader2, Database, CheckCircle2, UploadCloud, Settings } from "lucide-react";
+import { Search, Printer, AlertCircle, Loader2, Database, CheckCircle2, Settings, Layers, ArrowRight } from "lucide-react";
 import { getProductionDataByOP } from "../services/powerBiService";
 import LabelPreview from "../components/LabelPreview";
 import { PowerBiLabelData } from "../types";
@@ -9,7 +9,11 @@ const Generator: React.FC = () => {
   const [opNumber, setOpNumber] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [labelData, setLabelData] = useState<PowerBiLabelData | null>(null);
+  
+  // State to hold multiple results (e.g. same OP, different lots)
+  const [searchResults, setSearchResults] = useState<PowerBiLabelData[]>([]);
+  // State for the currently selected label
+  const [selectedLabel, setSelectedLabel] = useState<PowerBiLabelData | null>(null);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,12 +21,18 @@ const Generator: React.FC = () => {
 
     setLoading(true);
     setError(null);
-    setLabelData(null);
+    setSearchResults([]);
+    setSelectedLabel(null);
 
     try {
-      const data = await getProductionDataByOP(Number(opNumber));
-      if (data) {
-        setLabelData(data);
+      const results = await getProductionDataByOP(Number(opNumber));
+      
+      if (results && results.length > 0) {
+        setSearchResults(results);
+        // If only one result, select it automatically
+        if (results.length === 1) {
+          setSelectedLabel(results[0]);
+        }
       } else {
         setError("OP não encontrada no banco de dados. Você já importou os dados?");
       }
@@ -37,15 +47,9 @@ const Generator: React.FC = () => {
     window.print();
   };
 
-  // NEW LOGIC: Generate the URL based on the Admin configuration
   const getDetailsUrl = (data: PowerBiLabelData) => {
-    // 1. Try to get the configured public URL from localStorage
     const configuredUrl = localStorage.getItem("ARGOX_PUBLIC_URL");
-    
-    // 2. Fallback to current window origin if not configured
     const baseUrl = configuredUrl || window.location.origin;
-    
-    // 3. Construct the HashRouter link
     return `${baseUrl}/#/view/${data.ord_in_codigo}`;
   };
 
@@ -109,11 +113,63 @@ const Generator: React.FC = () => {
           )}
         </section>
 
+        {/* Selection Area (If multiple lots found) - Hidden on Print */}
+        {searchResults.length > 1 && (
+           <section className="mb-8 no-print animate-in fade-in slide-in-from-bottom-2">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
+                 <h3 className="text-amber-800 font-bold flex items-center gap-2 mb-3">
+                    <Layers size={20} />
+                    Múltiplos registros encontrados ({searchResults.length})
+                 </h3>
+                 <p className="text-sm text-amber-700 mb-4">
+                    Esta OP possui variações de lote ou filial. Selecione qual deseja imprimir:
+                 </p>
+                 <div className="grid gap-3">
+                    {searchResults.map((item, idx) => (
+                       <button
+                          key={idx}
+                          onClick={() => setSelectedLabel(item)}
+                          className={`
+                            flex items-center justify-between p-4 rounded-lg border text-left transition
+                            ${selectedLabel === item 
+                                ? 'bg-amber-100 border-amber-500 ring-1 ring-amber-500' 
+                                : 'bg-white border-amber-200 hover:bg-white/80 hover:border-amber-400'
+                            }
+                          `}
+                       >
+                          <div>
+                             <span className="text-xs font-bold uppercase text-slate-500">Lote</span>
+                             <div className="font-mono font-bold text-slate-900">{item.orl_st_lotefabricacao || "Sem lote"}</div>
+                          </div>
+                          <div className="text-right">
+                             <span className="text-xs font-bold uppercase text-slate-500">Filial</span>
+                             <div className="font-mono text-slate-900">{item.fil_in_codigo}</div>
+                          </div>
+                          <div className="text-right hidden sm:block">
+                             <span className="text-xs font-bold uppercase text-slate-500">Data</span>
+                             <div className="font-mono text-slate-900 text-sm">
+                                {new Date(item.ord_dt_abertura_real).toLocaleDateString('pt-BR')}
+                             </div>
+                          </div>
+                          {selectedLabel === item && <ArrowRight className="text-amber-600" />}
+                       </button>
+                    ))}
+                 </div>
+              </div>
+           </section>
+        )}
+
         {/* Label Preview Area */}
-        {labelData && (
+        {selectedLabel && (
           <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex justify-between items-center mb-4 no-print">
-              <h2 className="text-lg font-semibold text-slate-800">Pré-visualização da Etiqueta (10cm x 7cm)</h2>
+              <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+                <Printer size={18} />
+                Pré-visualização
+                <span className="bg-slate-200 text-slate-600 text-xs px-2 py-0.5 rounded-full">
+                   Lote: {selectedLabel.orl_st_lotefabricacao}
+                </span>
+              </h2>
               <button
                 onClick={handlePrint}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2 shadow-sm transition"
@@ -124,13 +180,13 @@ const Generator: React.FC = () => {
             </div>
             
             <div className="mb-4 text-xs text-slate-500 text-center no-print">
-                Link do QR Code: <code className="bg-slate-200 px-1 py-0.5 rounded">{getDetailsUrl(labelData)}</code>
+                Link do QR Code: <code className="bg-slate-200 px-1 py-0.5 rounded">{getDetailsUrl(selectedLabel)}</code>
             </div>
 
             <div className="bg-slate-200 p-8 rounded-xl flex justify-center border border-slate-300 print:p-0 print:bg-white print:border-none">
               <LabelPreview 
-                data={labelData} 
-                detailsUrl={getDetailsUrl(labelData)} 
+                data={selectedLabel} 
+                detailsUrl={getDetailsUrl(selectedLabel)} 
               />
             </div>
 
