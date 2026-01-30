@@ -5,21 +5,32 @@ import { PowerBiLabelData } from "../types";
 // --- SUPABASE READ OPERATIONS ---
 
 export const getProductionDataByOP = async (opNumber: number): Promise<PowerBiLabelData[]> => {
-  try {
-    const { data, error } = await supabase
-      .from(TABLE_NAME)
-      .select('*')
-      .eq('ord_in_codigo', opNumber);
+  // Tentativa 1: Usando o nome da tabela exatamente como definido (REL_ETIQUETAS)
+  let { data, error } = await supabase
+    .from(TABLE_NAME)
+    .select('*')
+    .eq('ord_in_codigo', opNumber);
 
-    if (error) {
-      throw error;
-    }
-
-    return (data || []) as PowerBiLabelData[];
-  } catch (error) {
-    console.error("Supabase query error:", error);
-    return [];
+  // Se der erro de "Relação não encontrada" (42P01), tenta em minúsculo
+  // Isso acontece porque o Postgres às vezes salva como 'rel_etiquetas'
+  if (error && error.code === '42P01') {
+      console.warn(`Tabela ${TABLE_NAME} não encontrada. Tentando minúsculo...`);
+      const retry = await supabase
+        .from(TABLE_NAME.toLowerCase())
+        .select('*')
+        .eq('ord_in_codigo', opNumber);
+      
+      data = retry.data;
+      error = retry.error;
   }
+
+  // Se ainda houver erro, lançamos para a UI mostrar
+  if (error) {
+    console.error("Supabase query error:", error);
+    throw new Error(`Erro no Banco de Dados (${error.code}): ${error.message}`);
+  }
+
+  return (data || []) as PowerBiLabelData[];
 };
 
 // --- POWER BI SYNC OPERATIONS (VIA VERCEL API) ---
