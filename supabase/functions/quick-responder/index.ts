@@ -1,43 +1,54 @@
 // Setup modern types for Deno
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3"
-
-// Declare Deno to avoid TypeScript errors in non-Deno environments
-declare const Deno: any;
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-// Use native Deno.serve (standard in Supabase Edge Runtime now)
-Deno.serve(async (req: Request) => {
-  // 1. Handle CORS Preflight
+// @ts-ignore
+Deno.serve(async (req) => {
+  // 1. Handle CORS Preflight - Responde imediatamente ao browser para liberar a conexão
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
     // 2. Parse Body safely
+    // Tentamos ler o corpo. Se falhar (vazio ou json inválido), retornamos erro amigável.
     let body;
     try {
-        body = await req.json();
+        const text = await req.text();
+        if (text) {
+            body = JSON.parse(text);
+        }
     } catch (e) {
-        throw new Error("Corpo da requisição inválido ou vazio (JSON expected).");
+        return new Response(JSON.stringify({ error: "Corpo da requisição inválido (esperado JSON)." }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200
+        });
+    }
+
+    if (!body) {
+        return new Response(JSON.stringify({ error: "Corpo da requisição vazio." }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200
+        });
     }
 
     const { action, config } = body;
     const logs: string[] = []
+    
+    // Log inicial
+    logs.push("Edge Function 'quick-responder' iniciada.");
 
     if (action !== 'sync') {
-        throw new Error(`Ação desconhecida: ${action}`)
+        throw new Error(`Ação desconhecida recebida: ${action}`)
     }
     
     if (!config) {
-        throw new Error("Configuração ausente no payload.")
+        throw new Error("Objeto 'config' ausente no payload.")
     }
-
-    logs.push("Função iniciada via Server-Side (v2).")
 
     // 3. Azure AD Authentication
     logs.push("Autenticando no Azure AD...")
@@ -55,17 +66,17 @@ Deno.serve(async (req: Request) => {
 
     if (!authRes.ok) {
         const txt = await authRes.text()
-        throw new Error(`Erro Auth Azure (${authRes.status}): ${txt}`)
+        throw new Error(`Falha na Autenticação Azure (${authRes.status}): ${txt}`)
     }
 
     const authData = await authRes.json()
     const token = authData.access_token
-    logs.push("Token Azure obtido.")
+    logs.push("Token Azure obtido com sucesso.")
 
     // 4. Power BI Query
-    logs.push("Consultando Power BI (DAX)...")
+    logs.push("Executando consulta DAX no Power BI...")
     
-    // Note: Use simple quotes for DAX string literals to avoid JSON stringify issues
+    // Dax query construction
     const daxQuery = `
     EVALUATE
     SELECTCOLUMNS(
@@ -93,21 +104,22 @@ Deno.serve(async (req: Request) => {
 
     if (!pbiRes.ok) {
         const txt = await pbiRes.text()
-        throw new Error(`Erro Power BI API (${pbiRes.status}): ${txt}`)
+        throw new Error(`Erro na API do Power BI (${pbiRes.status}): ${txt}`)
     }
 
     const pbiData = await pbiRes.json()
     
     if (pbiData.error) {
-        throw new Error(`Power BI retornou erro: ${JSON.stringify(pbiData.error)}`)
+        throw new Error(`Power BI retornou erro de consulta: ${JSON.stringify(pbiData.error)}`)
     }
 
     const rows = pbiData.results?.[0]?.tables?.[0]?.rows || []
-    logs.push(`${rows.length} linhas recebidas.`)
+    logs.push(`${rows.length} linhas recebidas do Power BI.`)
 
     if (rows.length === 0) {
         return new Response(JSON.stringify({ count: 0, logs }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200
         })
     }
 
@@ -131,12 +143,15 @@ Deno.serve(async (req: Request) => {
     const uniqueRows = Array.from(uniqueMap.values())
 
     // 6. Supabase Upsert
-    logs.push("Salvando no Supabase...")
+    logs.push(`Salvando ${uniqueRows.length} registros no Supabase...`)
+    
+    // @ts-ignore
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    // @ts-ignore
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
     if (!supabaseUrl || !supabaseKey) {
-        throw new Error("Variáveis de ambiente do Supabase (URL/KEY) não configuradas no servidor.")
+        throw new Error("Variáveis de ambiente (SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY) não estão configuradas no servidor Edge.")
     }
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseKey)
@@ -148,22 +163,26 @@ Deno.serve(async (req: Request) => {
         })
 
     if (upsertError) {
-        throw new Error(`Erro Supabase Upsert: ${upsertError.message}`)
+        throw new Error(`Falha ao salvar no banco de dados: ${upsertError.message}`)
     }
 
-    logs.push(`Processo concluído. ${uniqueRows.length} registros atualizados.`)
+    logs.push("Sincronização concluída com sucesso.")
 
+    // Sucesso: Retorna 200
     return new Response(JSON.stringify({ count: uniqueRows.length, logs }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
     })
 
-  } catch (error) {
-    // FATAL ERROR HANDLER: Always return 200 with error details so the client sees it.
-    const errorMessage = error instanceof Error ? error.message : String(error)
+  } catch (error: any) {
+    // FATAL ERROR HANDLER
+    // Importante: Retornamos status 200 mesmo com erro, para que o cliente (invoke)
+    // consiga ler o JSON com a mensagem de erro. Se retornarmos 500, o cliente joga uma exceção genérica.
+    const errorMessage = error.message || String(error)
     console.error("EDGE FUNCTION ERROR:", errorMessage)
     
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 200, // Important: Force 200 so the client library parses the body
+    return new Response(JSON.stringify({ error: errorMessage, logs: ["Processo abortado devido a erro fatal."] }), {
+      status: 200, 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }

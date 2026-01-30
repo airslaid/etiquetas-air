@@ -24,15 +24,11 @@ export const getProductionDataByOP = async (opNumber: number): Promise<PowerBiLa
 
 // --- POWER BI SYNC OPERATIONS (VIA EDGE FUNCTION) ---
 
-/**
- * Invokes the 'quick-responder' Supabase Edge Function to handle
- * the authentication and data sync server-side.
- */
 export const syncPowerBiToSupabase = async (
   onLog: (msg: string) => void
 ): Promise<number> => {
   try {
-    onLog("Contactando servidor de sincronização...");
+    onLog("Conectando ao servidor...");
 
     const payload = {
         action: 'sync',
@@ -49,29 +45,31 @@ export const syncPowerBiToSupabase = async (
     });
 
     if (error) {
-        console.error("FATAL INVOKE ERROR:", error);
-        // Tenta extrair informações úteis do erro, se for um erro de rede ou HTTP
-        let msg = error.message || 'Erro desconhecido';
+        console.error("INVOKE ERROR:", error);
         
-        // Se for erro de status (ex: 500, 404), o cliente do supabase geralmente
-        // encapsula isso.
-        if (msg.includes("non-2xx")) {
-            msg += ". (Verifique os logs da Edge Function no painel do Supabase. Possível falha de inicialização ou variáveis de ambiente ausentes.)";
+        let friendlyMsg = "";
+        
+        // Verifica erros comuns
+        if (String(error).includes("Failed to send a request")) {
+            friendlyMsg = "Não foi possível contactar a função. Verifique se ela foi implantada com 'npx supabase functions deploy quick-responder --no-verify-jwt'.";
+        } else if (String(error).includes("401") || String(error).includes("403")) {
+            friendlyMsg = "Erro de Permissão. Verifique se a função foi implantada com a flag '--no-verify-jwt'.";
+        } else {
+            friendlyMsg = `Erro de comunicação: ${error.message || error}`;
         }
         
-        throw new Error(`Falha de comunicação: ${msg}`);
+        throw new Error(friendlyMsg);
+    }
+
+    // Se a função retornou 200 OK, mas enviou um erro no JSON
+    if (data && data.error) {
+        throw new Error(`Erro do Servidor: ${data.error}`);
     }
 
     if (!data) {
-         throw new Error("A função não retornou dados. Resposta vazia.");
+         throw new Error("A função não retornou dados.");
     }
 
-    // Se a função retornou 200 mas com campo de erro (nosso catch manual)
-    if (data.error) {
-        throw new Error(data.error);
-    }
-
-    // Process logs returned from server
     if (data.logs && Array.isArray(data.logs)) {
         data.logs.forEach((logMsg: string) => onLog(logMsg));
     }
@@ -79,7 +77,8 @@ export const syncPowerBiToSupabase = async (
     return data.count || 0;
 
   } catch (error: any) {
-    onLog(`ERRO: ${error.message}`);
+    const msg = error.message || "Erro desconhecido";
+    onLog(`[FALHA] ${msg}`);
     throw error;
   }
 };
