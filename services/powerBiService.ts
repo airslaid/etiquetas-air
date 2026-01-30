@@ -6,57 +6,29 @@ import { PowerBiLabelData } from "../types";
 
 export const getProductionDataByOP = async (opNumber: number): Promise<PowerBiLabelData[]> => {
   try {
-      // Tentativa 1: Usando o nome da tabela exatamente como definido
-      let { data, error } = await supabase
-        .from(TABLE_NAME)
-        .select('*')
-        .eq('ord_in_codigo', opNumber);
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('*')
+      .eq('ord_in_codigo', opNumber);
 
-      // Se der erro de "Relação não encontrada" (42P01), tenta em minúsculo
-      if (error && error.code === '42P01') {
-          console.warn(`Tabela ${TABLE_NAME} não encontrada. Tentando minúsculo...`);
-          const retry = await supabase
-            .from(TABLE_NAME.toLowerCase())
-            .select('*')
-            .eq('ord_in_codigo', opNumber);
-          
-          data = retry.data;
-          error = retry.error;
-      }
-
-      // Tratamento de Erros
-      if (error) {
-        console.error("Supabase query error:", error);
-        throw error;
-      }
-
-      return (data || []) as PowerBiLabelData[];
-
-  } catch (error: any) {
-    console.error("Erro capturado no service:", error);
-    let msg = error.message || "Erro desconhecido";
-    
-    // Erros de Rede / Conexão
-    if (msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
-        throw new Error("Erro de Conexão: O navegador bloqueou o acesso ao banco de dados. Se estiver usando uma VPN ou bloqueador de anúncios, tente desativá-los.");
-    }
-    
-    // Erros de Chave API
-    if (msg.includes("Invalid API key") || msg.includes("JWT")) {
-        throw new Error("A Chave de API está incorreta ou expirada.");
+    if (error) {
+      throw error;
     }
 
-    throw new Error(`Erro no Banco de Dados: ${msg}`);
+    return (data || []) as PowerBiLabelData[];
+  } catch (error) {
+    console.error("Supabase query error:", error);
+    return [];
   }
 };
 
-// --- POWER BI SYNC OPERATIONS (VIA VERCEL API) ---
+// --- POWER BI SYNC OPERATIONS (VIA EDGE FUNCTION) ---
 
 export const syncPowerBiToSupabase = async (
   onLog: (msg: string) => void
 ): Promise<number> => {
   try {
-    onLog("Conectando via API Segura...");
+    onLog("Conectando ao servidor...");
 
     const payload = {
         action: 'sync',
@@ -68,28 +40,34 @@ export const syncPowerBiToSupabase = async (
         }
     };
 
-    const response = await fetch('/api/sync', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
+    const { data, error } = await supabase.functions.invoke('quick-responder', {
+      body: payload
     });
 
-    if (!response.ok) {
-        let errorMsg = `Erro HTTP: ${response.status}`;
-        try {
-            const errData = await response.json();
-            if (errData.error) errorMsg = errData.error;
-        } catch (e) { /* ignore */ }
+    if (error) {
+        console.error("INVOKE ERROR:", error);
         
-        throw new Error(errorMsg);
+        let friendlyMsg = "";
+        
+        // Verifica erros comuns
+        if (String(error).includes("Failed to send a request")) {
+            friendlyMsg = "Não foi possível contactar a função. Verifique se ela foi implantada com 'npx supabase functions deploy quick-responder --no-verify-jwt'.";
+        } else if (String(error).includes("401") || String(error).includes("403")) {
+            friendlyMsg = "Erro de Permissão. Verifique se a função foi implantada com a flag '--no-verify-jwt'.";
+        } else {
+            friendlyMsg = `Erro de comunicação: ${error.message || error}`;
+        }
+        
+        throw new Error(friendlyMsg);
     }
 
-    const data = await response.json();
-
-    if (data.error) {
+    // Se a função retornou 200 OK, mas enviou um erro no JSON
+    if (data && data.error) {
         throw new Error(`Erro do Servidor: ${data.error}`);
+    }
+
+    if (!data) {
+         throw new Error("A função não retornou dados.");
     }
 
     if (data.logs && Array.isArray(data.logs)) {
@@ -101,11 +79,6 @@ export const syncPowerBiToSupabase = async (
   } catch (error: any) {
     const msg = error.message || "Erro desconhecido";
     onLog(`[FALHA] ${msg}`);
-    
-    if (msg.includes("SUPABASE_URL")) {
-        onLog("[DICA] Adicione SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY nas configurações da Vercel.");
-    }
-    
     throw error;
   }
 };
