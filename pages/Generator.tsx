@@ -34,13 +34,10 @@ const Generator: React.FC = () => {
           setSelectedLabel(results[0]);
         }
       } else {
-        // Se chegou aqui, não deu erro técnico, mas retornou vazio.
-        setError(`A OP ${opNumber} não foi encontrada. Verifique se os dados foram importados recentemente no Admin.`);
+        setError("OP não encontrada no banco de dados. Você já importou os dados?");
       }
-    } catch (err: any) {
-      console.error(err);
-      // Mostra o erro real na tela
-      setError(err.message || "Erro desconhecido ao conectar com o banco de dados.");
+    } catch (err) {
+      setError("Erro ao conectar com o banco de dados.");
     } finally {
       setLoading(false);
     }
@@ -109,12 +106,9 @@ const Generator: React.FC = () => {
           </form>
 
           {error && (
-            <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-lg flex items-start gap-2 border border-red-100">
-              <AlertCircle size={20} className="shrink-0 mt-0.5" />
-              <div>
-                 <p className="font-bold">Não foi possível buscar os dados:</p>
-                 <p className="text-sm">{error}</p>
-              </div>
+            <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-lg flex items-center gap-2 border border-red-100">
+              <AlertCircle size={20} />
+              {error}
             </div>
           )}
         </section>
