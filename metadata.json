@@ -1,5 +1,5 @@
 {
-  "name": "Argox Label Generator",
+  "name": "Copy of Argox Label Generator",
   "description": "Application to query Power BI production data and generate 3-column QR code labels for Argox printers.",
   "requestFramePermissions": []
 }
