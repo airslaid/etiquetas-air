@@ -8,7 +8,7 @@ const AdminImport: React.FC = () => {
   const [logs, setLogs] = useState<string[]>([]);
   const [successCount, setSuccessCount] = useState(0);
   const [hasError, setHasError] = useState(false);
-  const [dbSchemaError, setDbSchemaError] = useState(false); // New state for specific 23505 error
+  const [dbSchemaError, setDbSchemaError] = useState(false);
   
   // Configuration State
   const [publicUrl, setPublicUrl] = useState("");
@@ -198,7 +198,7 @@ ALTER TABLE "REL_ETIQUETAS" ADD PRIMARY KEY (ord_in_codigo, fil_in_codigo, orl_s
               {hasError ? <XCircle size={18} /> : <ShieldCheck size={18} />}
               Log de Sincronização
             </h3>
-            <div className={`bg-slate-900 text-slate-300 p-4 rounded-lg font-mono text-xs h-48 overflow-y-auto shadow-inner ${hasError ? "border-2 border-red-500" : ""}`}>
+            <div className={`bg-slate-900 text-slate-300 p-4 rounded-lg font-mono text-xs h-48 overflow-y-auto shadow-inner whitespace-pre-wrap ${hasError ? "border-2 border-red-500" : ""}`}>
               {logs.length === 0 && <p className="opacity-50 italic">Aguardando início da sincronização...</p>}
               {logs.map((log, i) => (
                 <div key={i} className="mb-1 border-b border-slate-800 pb-1 last:border-0 break-words">{log}</div>
@@ -220,8 +220,8 @@ ALTER TABLE "REL_ETIQUETAS" ADD PRIMARY KEY (ord_in_codigo, fil_in_codigo, orl_s
         <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-100 text-blue-800 text-xs flex gap-3">
             <AlertTriangle className="shrink-0" size={16} />
             <div>
-                <p className="font-bold mb-1">Nota sobre Conexão</p>
-                <p>O sistema utiliza um proxy seguro (CORS) para conectar com a Microsoft. Se ainda ocorrerem erros, verifique se seu firewall corporativo permite acesso a <code>corsproxy.io</code>.</p>
+                <p className="font-bold mb-1">Nota sobre Variáveis de Ambiente</p>
+                <p>Certifique-se de que <code>SUPABASE_URL</code> e <code>SUPABASE_SERVICE_ROLE_KEY</code> estão configurados no painel da Vercel (Project Settings).</p>
             </div>
         </div>
       </div>
